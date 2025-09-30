@@ -1,0 +1,18 @@
+CREATE TABLE IF NOT EXISTS currency (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code VARCHAR(5) NOT NULL UNIQUE,
+    full_name VARCHAR(100) NOT NULL UNIQUE,
+    sign VARCHAR(5)
+
+
+);
+
+CREATE TABLE IF NOT EXISTS ExchangeRate (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    BaseCurrencyId INTEGER NOT NULL,
+    TargetCurrencyId INTEGER NOT NULL,
+    RATE decimal NOT NULL,
+
+    FOREIGN KEY (BaseCurrencyId) REFERENCES currency(id),
+    FOREIGN KEY (TargetCurrencyId) REFERENCES currency(id)
+)
