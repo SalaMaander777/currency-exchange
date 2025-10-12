@@ -21,9 +21,9 @@ public class CurrencyMapper {
 
     public CurrencyEntity toCurrencyEntity(CurrencyDto currencyDto){
         return new CurrencyEntity(
-                currencyDto.name(),
-                currencyDto.code(),
-                currencyDto.sign()
+                currencyDto.getName(),
+                currencyDto.getCode(),
+                currencyDto.getSign()
         );
     }
 

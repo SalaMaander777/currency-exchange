@@ -34,7 +34,14 @@ public class CurrencyRepositoryImpl extends AbstractJDBCRepository<CurrencyEntit
            statement.setString(1,entity.getName());
            statement.setString(2,entity.getCode());
            statement.setString(3,entity.getSign());
-           statement.execute();
+           statement.executeUpdate();
+
+           ResultSet rs = statement.getGeneratedKeys();
+           if(rs.next()){
+               Long id = rs.getLong(1);
+
+               return new CurrencyEntity(id, entity.getName(), entity.getCode(), entity.getSign());
+           }
        }catch (SQLException e){
            throw new RuntimeException(e);
        }return null;
