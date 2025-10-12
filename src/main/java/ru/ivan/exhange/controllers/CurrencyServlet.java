@@ -30,7 +30,6 @@ public class CurrencyServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String code = request.getPathInfo().substring(1);
-        System.out.println(code);
         response.setContentType("application/json");
         if (code == null || code.isEmpty()) {
             ErrorDto error = new ErrorDto("Параметр code обязателен в запросе", 400);

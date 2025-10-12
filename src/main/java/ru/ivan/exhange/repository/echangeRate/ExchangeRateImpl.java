@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 
 public class ExchangeRateImpl  extends AbstractJDBCRepository<ExchangeRateEntity> implements ExchangeRateRepository {
     @Override
@@ -53,5 +54,24 @@ public class ExchangeRateImpl  extends AbstractJDBCRepository<ExchangeRateEntity
     @Override
     public ExchangeRateEntity update(ExchangeRateEntity entity) {
         return null;
+    }
+
+    @Override
+    public Optional<ExchangeRateEntity> getByPair(Long id1, Long id2) {
+        String SQLQuery = """
+                SELECT * from ExchangeRates where BaseCurrencyId=? and TargetCurrencyId=?;
+        """;
+
+        try(Connection connection = DbUtil.connect(); PreparedStatement statement = connection.prepareStatement(SQLQuery)){
+            statement.setLong(1, id1);
+            statement.setLong(2, id2);
+            ResultSet rs = statement.executeQuery();
+            if (rs.next()) {
+                return Optional.of(mapResultSet(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return Optional.empty();
     }
 }

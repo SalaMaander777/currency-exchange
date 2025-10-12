@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 
 public class CurrencyRepositoryImpl extends AbstractJDBCRepository<CurrencyEntity>
         implements CurrencyRepository {
@@ -56,18 +57,18 @@ public class CurrencyRepositoryImpl extends AbstractJDBCRepository<CurrencyEntit
 
 
     @Override
-    public CurrencyEntity getByCode(String code) {
+    public Optional<CurrencyEntity> getByCode(String code) {
         String SQLQuery = """
                select * from currency where code = ?;""";
         try(Connection connection = DbUtil.connect(); PreparedStatement statement = connection.prepareStatement(SQLQuery)){
             statement.setString(1,code);
             ResultSet rs = statement.executeQuery();
             if(rs.next()){
-                return mapResultSet(rs);
+                return Optional.of(mapResultSet(rs));
             }
         }catch (SQLException e){
             throw new RuntimeException(e);
-        }return null;
+        }return Optional.empty();
 
     }
 }

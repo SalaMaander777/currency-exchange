@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import ru.ivan.exhange.dto.ExchangeRateDto;
+import ru.ivan.exhange.dto.ExchangeRateResponse;
 import ru.ivan.exhange.service.ExchangeRateService;
 
 import java.io.IOException;
@@ -21,9 +22,13 @@ public class ExchangeRateServlet extends HttpServlet {
         this.objectMapper = new ObjectMapper();
     }
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+            response.setContentType("application/json");
             String pair = request.getPathInfo().substring(1);
             String code1 = pair.substring(0, 3);
             String code2 = pair.substring(3);
+            ExchangeRateResponse fromDb = exchangeRateService.getByPair(code1, code2);
+            objectMapper.writeValue(response.getWriter(), fromDb);
+
 
 
 
