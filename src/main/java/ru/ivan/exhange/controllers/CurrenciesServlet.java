@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import ru.ivan.exhange.dto.CurrencyDto;
 import ru.ivan.exhange.dto.ErrorDto;
 import ru.ivan.exhange.entities.CurrencyEntity;
+import ru.ivan.exhange.exceptions.DatabaseConnectionException;
+import ru.ivan.exhange.exceptions.EntityIsPresentException;
 import ru.ivan.exhange.service.CurrencyService;
 
 import java.io.IOException;
@@ -28,10 +30,14 @@ public class CurrenciesServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        List<CurrencyDto> currencies = currencyService.findAll();
-        if (currencies == null || currencies.isEmpty()) {
-            ErrorDto errorDto = new ErrorDto("No currencies in database", 200);
-            objectMapper.writeValue(response.getWriter(), errorDto);
+        List<CurrencyDto> currencies = null;
+        try {
+            currencies = currencyService.findAll();
+        }
+        catch (DatabaseConnectionException e){
+            ErrorDto errorDto = new ErrorDto(e.getMessage(), 500);
+            response.setStatus(errorDto.code());
+            objectMapper.writeValue(response.getOutputStream(), errorDto);
         }
         response.setStatus(200);
         objectMapper.writeValue(response.getWriter(), currencies);
@@ -39,26 +45,32 @@ public class CurrenciesServlet extends HttpServlet {
 
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        String name = request.getParameter("name");
-        String code = request.getParameter("code");
-        String sign = request.getParameter("sign");
-        if (name == null || name.isEmpty() || code == null || code.isEmpty() || sign == null || sign.isEmpty()) {
-            ErrorDto errorDto = new ErrorDto("Invalid request", 400);
+        try {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            String name = request.getParameter("name");
+            String code = request.getParameter("code");
+            String sign = request.getParameter("sign");
+            if (name == null || name.isEmpty() || code == null || code.isEmpty() || sign == null || sign.isEmpty()) {
+                ErrorDto errorDto = new ErrorDto("Отсутствует нужное поле формы", 400);
+                response.setStatus(errorDto.code());
+                objectMapper.writeValue(response.getWriter(), errorDto);
+            }
+            CurrencyDto currencyToAdd = new CurrencyDto(name, code, sign);
+            CurrencyDto returned = currencyService.save(currencyToAdd);
+            if (returned == null) {
+                ErrorDto errorDto = new ErrorDto("Currencies could not be saved", 400);
+                response.setStatus(errorDto.code());
+                objectMapper.writeValue(response.getWriter(), errorDto);
+            }
+            response.setStatus(200);
+            objectMapper.writeValue(response.getWriter(), returned);
+        }
+        catch (EntityIsPresentException e) {
+            ErrorDto errorDto = new ErrorDto(e.getMessage(), 409);
             response.setStatus(errorDto.code());
             objectMapper.writeValue(response.getWriter(), errorDto);
         }
-        CurrencyDto currencyToAdd = new CurrencyDto(name, code, sign);
-        CurrencyDto returned = currencyService.save(currencyToAdd);
-        if (returned == null) {
-            ErrorDto errorDto = new ErrorDto("Currencies could not be saved", 400);
-            response.setStatus(errorDto.code());
-            objectMapper.writeValue(response.getWriter(), errorDto);
-        }
-        response.setStatus(200);
-        objectMapper.writeValue(response.getWriter(), returned);
-
 
     }
 }

@@ -8,13 +8,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ru.ivan.exhange.dto.CurrencyDto;
 import ru.ivan.exhange.dto.ErrorDto;
-import ru.ivan.exhange.entities.CurrencyEntity;
-import ru.ivan.exhange.repository.currency.CurrencyRepository;
+
+import ru.ivan.exhange.exceptions.CurrencyNotFoundException;
+
 import ru.ivan.exhange.service.CurrencyService;
 
 import java.io.IOException;
 
-@WebServlet("/currency")
+
+@WebServlet("/currency/*")
 public class CurrencyServlet extends HttpServlet {
     private final CurrencyService currencyService;
     private final ObjectMapper objectMapper ;
@@ -27,24 +29,23 @@ public class CurrencyServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String code = request.getParameter("code");
+        String code = request.getPathInfo().substring(1);
+        System.out.println(code);
         response.setContentType("application/json");
-        if (code == null){
+        if (code == null || code.isEmpty()) {
             ErrorDto error = new ErrorDto("Параметр code обязателен в запросе", 400);
-
             response.setStatus(error.code());
             objectMapper.writeValue(response.getWriter(), error);
         }
-        CurrencyDto currency = currencyService.findByCode(code);
-        if (currency == null){
-            ErrorDto error = new ErrorDto("Unknown currency with code = " + code, 404);
-
+        try {
+            CurrencyDto currency = currencyService.findByCode(code);
+            response.setStatus(200);
+            objectMapper.writeValue(response.getWriter(), currency);
+        }catch (CurrencyNotFoundException e){
+            ErrorDto error = new ErrorDto(e.getMessage(), 404);
             response.setStatus(error.code());
-            objectMapper.writeValue(response.getWriter(), error);
+            objectMapper.writeValue(response.getWriter(),error);
         }
-        response.setStatus(200);
-        objectMapper.writeValue(response.getWriter(), currency);
-
 
 
     }
